@@ -1,0 +1,36 @@
+volumes:
+  # pg_data:
+  pg_data_test:
+
+services:
+  # db:
+  #   container_name: "db"
+  #   image: postgres:13.10
+  #   restart: always
+  #   env_file: ../.env
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - custom_network
+  #   volumes:
+  #     - pg_data:/var/lib/postgresql/data
+  
+  db_test:
+    container_name: "${DB_TEST_HOST}"
+    image: postgres:13.10
+    restart: always
+    # env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_TEST_NAME}
+      POSTGRES_USER: ${DB_TEST_USER}
+      POSTGRES_PASSWORD: ${DB_TEST_PASSWORD}
+    ports:
+      - "${DB_TEST_PORT}:5432"
+    networks:
+      - custom_network
+    volumes:
+      - pg_data_test:/var/lib/postgresql/data
+
+networks:
+  custom_network:
+    driver: bridge

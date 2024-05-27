@@ -1,0 +1,16 @@
+up:
+	docker compose -f docker-compose_local.yaml up -d
+
+stop:
+	docker compose -f docker-compose_local.yaml stop
+
+down:
+	docker compose -f docker-compose_local.yaml down
+
+down -v:
+	docker compose -f docker-compose_local.yaml down -v
+
+
+
+exec
+	docker exec -it db_? psql -p 5432 -U ? -d db_?
