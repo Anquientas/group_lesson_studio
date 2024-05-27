@@ -2,6 +2,7 @@ import colorama
 from fastapi import FastAPI
 
 from journal.router import router as journal_router
+from frontend_jinja.pages.router import router as pages_router
 
 # Delete before production!
 from contextlib import asynccontextmanager
@@ -24,6 +25,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(journal_router)
+app.include_router(pages_router)
 
 
 # app.include_router(
