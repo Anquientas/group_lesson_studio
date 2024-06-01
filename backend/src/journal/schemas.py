@@ -3,9 +3,9 @@ from typing import Annotated, Optional
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 
-# DTO = Data Transform Object
+# DTO = Data Transfer Object
 class StudioAddDTO(BaseModel):
-    name: str = Field(max_length=50)
+    name: str = Field(max_length=50, title='Название студии')
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -14,9 +14,15 @@ class StudioDTO(StudioAddDTO):
     id: int
 
 
+class StudioActiveDTO(StudioDTO):
+    is_active: bool
+
+
 class StudioChangeDTO(BaseModel):
-    # name: Optional[str] = Field(None, max_length=50)
-    name: Annotated[str, StringConstraints(max_length=50)] = Field(None)
+    name: Annotated[
+        str,
+        StringConstraints(max_length=50)
+    ] = Field(None, title='Название студии')
     is_active: Optional[bool] = Field(True)
 
 

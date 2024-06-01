@@ -1,33 +1,26 @@
-from fastapi.responses import JSONResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from database import new_async_session
-# from .constants import StudioMessages
+
 from .models import Studio
-from .schemas import StudioAddDTO, StudioDTO, StudioChangeDTO
+from .schemas import StudioAddDTO, StudioDTO, StudioChangeDTO, StudioActiveDTO
 
 
 class StudioRepository:
-    @classmethod
-    async def add_studio(cls, data: StudioAddDTO) -> StudioDTO:
+    @staticmethod
+    async def get_count_by_name(studio: StudioAddDTO) -> int:
         async with new_async_session() as session:
-            studio_dict = data.model_dump()
-            # print(studio_dict)
+            query = select(func.count()).filter(Studio.name == studio.name)
+            number = await session.execute(query)
+            return number.scalars().all()[0]
+
+    @classmethod
+    async def add_studio(cls, studio: StudioAddDTO) -> StudioDTO:
+        async with new_async_session() as session:
+            studio_dict = studio.model_dump()
             studio = Studio(**studio_dict)
-
-            studios = select(Studio).filter(Studio.name == studio.name)
-            # print('studios =', studios)
-            studios = await session.execute(studios)
-            # studios = studios.scalars().all()
-            # print('studios execute =', studios)
-            # if studio.name in studios:
-            if studios:
-                return JSONResponse(status_code=400, content=None)
-
             session.add(studio)
-            # await session.flush()
             await session.commit()
-            # print('studio after commit =', studio)
             return studio
 
     @classmethod
@@ -36,26 +29,18 @@ class StudioRepository:
             query = select(Studio).filter(Studio.is_active)
             result = await session.execute(query)
             studio_models = result.scalars().all()
-            # print('STUDIO_MODELS:', studio_models)
             studio_schemas = [
                 StudioDTO.model_validate(studio) for studio in studio_models
             ]
-            # print('STUDIO_SCHEMAS:', studio_schemas)
             return studio_schemas
 
     @classmethod
-    async def get_studio(cls, studio_id: int) -> StudioDTO:
+    async def get_studio(cls, studio_id: int) -> StudioActiveDTO:
         async with new_async_session() as session:
             query = select(Studio).filter(Studio.id == studio_id)
             result = await session.execute(query)
             studio_model = result.scalars().one_or_none()
-            if not studio_model:
-                return JSONResponse(status_code=404, content=None)
-            if not studio_model.is_active:
-                return JSONResponse(status_code=403, content=None)
-            # print('STUDIO_MODEL:', studio_model)
-            studio_schema = StudioDTO.model_validate(studio_model)
-            # print('STUDIO_SCHEMA:', studio_schema)
+            studio_schema = StudioActiveDTO.model_validate(studio_model)
             return studio_schema
 
     @classmethod
@@ -64,16 +49,8 @@ class StudioRepository:
             query = select(Studio).filter(Studio.id == studio_id)
             result = await session.execute(query)
             studio = result.scalars().one_or_none()
-            # print('studio_model =', studio)
-            if not studio:
-                return JSONResponse(status_code=404, content=None)
-            if not studio.is_active:
-                return JSONResponse(status_code=403, content=None)
             if data.name:
                 studio.name = data.name
             studio.is_active = data.is_active
-            session.add(studio)
-            # await session.flush()
             await session.commit()
-            # print('result studio =', studio)
             return studio
