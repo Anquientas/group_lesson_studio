@@ -3,14 +3,14 @@ class ObjectNotFoundException(ValueError):
     pass
 
 
-class ObjectNotActiveException(Exception):
-    """Исключение при получении неактивного статуса объекта."""
-    pass
-
-
-class ObjectIsExistException(ValueError):
+class ObjectAlreadyExistsException(ValueError):
     """
     Исключение при создании нового объекта,
     если уже существует объект с переданным параметром.
     """
     pass
+
+
+# class ObjectIsNotActiveException(Exception):
+#     """Исключение при получении неактивного статуса объекта."""
+#     pass

@@ -1,6 +1,4 @@
-from typing import Annotated, Optional
-
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # DTO = Data Transfer Object
@@ -12,18 +10,6 @@ class StudioAddDTO(BaseModel):
 
 class StudioDTO(StudioAddDTO):
     id: int
-
-
-class StudioActiveDTO(StudioDTO):
-    is_active: bool
-
-
-class StudioChangeDTO(BaseModel):
-    name: Annotated[
-        str,
-        StringConstraints(max_length=50)
-    ] = Field(None, title='Название студии')
-    is_active: Optional[bool] = Field(True)
 
 
 class BranchAddDTO(BaseModel):
