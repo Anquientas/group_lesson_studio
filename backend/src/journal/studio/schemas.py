@@ -10,22 +10,3 @@ class StudioAddDTO(BaseModel):
 
 class StudioDTO(StudioAddDTO):
     id: int
-
-
-class BranchAddDTO(BaseModel):
-    name: str
-    address: str
-
-
-class BranchDTO(BranchAddDTO):
-    id: int
-    is_active: bool
-
-
-class RoomAddDTO(BaseModel):
-    name: str
-
-
-class RoomDTO(RoomAddDTO):
-    id: int
-    is_active: bool

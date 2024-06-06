@@ -1,9 +1,8 @@
 from typing import Optional
 from sqlalchemy import func, select
 
-from database import new_async_session
-
-from .exceptions import ObjectNotFoundException
+from ...database import new_async_session
+from ..exceptions import ObjectNotFoundException
 from .models import Studio
 from .schemas import StudioAddDTO, StudioDTO
 

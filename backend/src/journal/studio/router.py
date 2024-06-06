@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from .exceptions import (
+from ..exceptions import (
     ObjectAlreadyExistsException,
     ObjectNotFoundException
 )
@@ -10,18 +10,18 @@ from .schemas import StudioAddDTO, StudioDTO
 
 
 router = APIRouter(
-    prefix='',
-    tags=['Journal']
+    prefix='/studios',
+    tags=['Studios']
 )
 
 
-@router.get('/studios')
+@router.get('/')
 async def get_studios() -> list[StudioDTO]:
     studios = await StudioService.get_studios()
     return studios
 
 
-@router.post('/studios', response_model=StudioDTO)
+@router.post('/', response_model=StudioDTO)
 async def add_studio(
     studio: StudioAddDTO,
 ) -> StudioDTO:
@@ -33,7 +33,7 @@ async def add_studio(
 
 
 @router.get(
-    '/studios/{studio_id}',
+    '/{studio_id}',
     response_model=StudioDTO
 )
 async def get_studio(studio_id: int) -> StudioDTO:
@@ -42,12 +42,9 @@ async def get_studio(studio_id: int) -> StudioDTO:
         return studio
     except ObjectNotFoundException:
         return JSONResponse(status_code=404, content=None)
-    except Exception as exception:
-        print(exception)
-        return exception
 
 
-@router.patch('/studios/{studio_id}')
+@router.patch('/{studio_id}')
 async def change_studio(
     studio: StudioAddDTO,
     studio_id: int,
@@ -61,7 +58,7 @@ async def change_studio(
         return JSONResponse(status_code=404, content=None)
 
 
-@router.delete('/studios/{studio_id}')
+@router.delete('/{studio_id}')
 async def delete_studio(
     studio_id: int,
 ) -> None:
