@@ -18,7 +18,7 @@ class Role(Model):
     role: Mapped[str] = mapped_column(String(50))
 
 
-class Branch(Model):
+class Stuff(Model):
     __tablename__ = 'stuff'
 
     id: Mapped[int] = mapped_column(primary_key=True)
