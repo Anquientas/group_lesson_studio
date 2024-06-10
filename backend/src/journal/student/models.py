@@ -1,4 +1,6 @@
-from sqlalchemy import String, TIMESTAMP
+from datetime import datetime
+
+from sqlalchemy import String, TIMESTAMP, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Model
@@ -15,6 +17,8 @@ class Student(Model):
     gender: Mapped[Gender]
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
     email: Mapped[str] = mapped_column(String(150))
-    created_at: Mapped[TIMESTAMP]
+    created_at:  Mapped[datetime] = mapped_column(
+        server_default=text('TIMEZONE("utc", now())')
+    )
     changed_at: Mapped[TIMESTAMP]
     is_active: Mapped[bool] = mapped_column(default=True)

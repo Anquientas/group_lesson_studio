@@ -1,6 +1,7 @@
+from datetime import datetime
 import enum
 
-from sqlalchemy import ForeignKey, String, TIMESTAMP, TIME, DATE
+from sqlalchemy import ForeignKey, String, TIMESTAMP, TIME, DATE, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Model
@@ -29,7 +30,9 @@ class Lesson(Model):
     date: Mapped[DATE]
     time_start: Mapped[TIME]
     time_end: Mapped[TIME]
-    created_at: Mapped[TIMESTAMP]
+    created_at:  Mapped[datetime] = mapped_column(
+        server_default=text('TIMEZONE("utc", now())')
+    )
     changed_at: Mapped[TIMESTAMP]
     status_id: Mapped[LessonStatus]
 
@@ -48,5 +51,7 @@ class LessonStudent(Model):
     lesson_id: Mapped[int] = mapped_column(ForeignKey('lesson.id'))
     student_id: Mapped[int] = mapped_column(ForeignKey('student.id'))
     visit_id: Mapped[int] = mapped_column(ForeignKey('visit.id'))
-    added_at: Mapped[TIMESTAMP]
+    added_at:  Mapped[datetime] = mapped_column(
+        server_default=text('TIMEZONE("utc", now())')
+    )
     excluded_at: Mapped[TIMESTAMP]
