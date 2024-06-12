@@ -19,8 +19,8 @@ class Role(Model):
     role: Mapped[str] = mapped_column(String(50))
 
 
-class Stuff(Model):
-    __tablename__ = 'stuff'
+class Employee(Model):
+    __tablename__ = 'employee'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     surname: Mapped[str] = mapped_column(String(50), nullable=False)
