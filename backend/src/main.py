@@ -1,8 +1,10 @@
 import colorama
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from journal.router import router as journal_router
-from frontend_jinja.pages.router import router as pages_router
+from journal.studio.router import router as studio_router
+from journal.branch.router import router as branch_router
+from journal.room.router import router as room_router
 
 # Delete before production!
 from contextlib import asynccontextmanager
@@ -24,8 +26,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(journal_router)
-app.include_router(pages_router)
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+app.include_router(studio_router)
+app.include_router(branch_router)
+app.include_router(room_router)
 
 
 # app.include_router(
