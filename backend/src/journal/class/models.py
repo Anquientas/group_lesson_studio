@@ -27,7 +27,4 @@ class ClassStudent(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     class_id: Mapped[int] = mapped_column(ForeignKey('class.id'))
     student_id: Mapped[int] = mapped_column(ForeignKey('student.id'))
-    added_at: Mapped[datetime] = mapped_column(
-        server_default=text('TIMEZONE("utc", now())')
-    )
-    excluded_at: Mapped[TIMESTAMP]
+    is_excluded: Mapped[bool] = mapped_column(default=False)
