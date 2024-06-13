@@ -12,7 +12,10 @@ class RoomRepository:
     @classmethod
     async def get_count_by_name(cls, data: RoomAddDTO) -> int:
         async with new_async_session() as session:
-            query = select(func.count()).filter(Room.name == data.name)
+            query = select(func.count()).filter(
+                Room.name == data.name,
+                Room.is_active
+            )
             number = await session.execute(query)
             return number.scalars().all()[0]
 

@@ -5,14 +5,15 @@ from ..exceptions import (
 from .repository import BranchRepository
 from .schemas import (
     BranchDTO,
-    BranchAddDTO
+    BranchAddDTO,
+    BranchChangeDTO
 )
 
 
 class BranchService:
     @staticmethod
-    async def get_branches() -> list[BranchDTO]:
-        branchs = await BranchRepository.get_branches()
+    async def get_branches(studio_id: int) -> list[BranchDTO]:
+        branchs = await BranchRepository.get_branches(studio_id)
         return branchs
 
     @staticmethod
@@ -33,7 +34,7 @@ class BranchService:
     @staticmethod
     async def change_branch(
         branch_id: int,
-        data: BranchAddDTO
+        data: BranchChangeDTO
     ) -> BranchDTO:
         branch = await BranchRepository.get_branch(branch_id)
         if not branch:

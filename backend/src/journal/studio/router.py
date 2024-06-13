@@ -21,7 +21,7 @@ async def get_studios() -> list[StudioDTO]:
     return studios
 
 
-@router.post('/', response_model=StudioDTO)
+@router.post('/', response_model=StudioDTO, status_code=201)
 async def add_studio(
     studio: StudioAddDTO,
 ) -> StudioDTO:
@@ -64,6 +64,6 @@ async def delete_studio(
 ) -> None:
     try:
         await StudioService.delete_studio(studio_id)
-        return JSONResponse(status_code=410, content=None)
+        return JSONResponse(status_code=204, content=None)
     except ObjectNotFoundException:
         return JSONResponse(status_code=404, content=None)

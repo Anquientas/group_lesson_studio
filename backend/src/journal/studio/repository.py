@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy import func, select
 
-from ...database import new_async_session
+from database import new_async_session
 from ..exceptions import ObjectNotFoundException
 from .models import Studio
 from .schemas import StudioAddDTO, StudioDTO
@@ -11,7 +11,10 @@ class StudioRepository:
     @classmethod
     async def get_count_by_name(cls, data: StudioAddDTO) -> int:
         async with new_async_session() as session:
-            query = select(func.count()).filter(Studio.name == data.name)
+            query = select(func.count()).filter(
+                Studio.name == data.name,
+                Studio.is_active
+            )
             number = await session.execute(query)
             return number.scalars().all()[0]
 

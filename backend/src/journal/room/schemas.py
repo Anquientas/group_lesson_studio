@@ -11,4 +11,9 @@ class RoomAddDTO(BaseModel):
 
 class RoomDTO(RoomAddDTO):
     id: int
-    is_active: bool
+
+
+class RoomChangeDTO(BaseModel):
+    name: str = Field(max_length=50, title='Помещение')
+
+    # model_config = ConfigDict(from_attributes=True)

@@ -6,7 +6,7 @@ from ..exceptions import (
     ObjectNotFoundException
 )
 from .service import BranchService
-from .schemas import BranchAddDTO, BranchDTO
+from .schemas import BranchAddDTO, BranchDTO, BranchChangeDTO
 
 
 router = APIRouter(
@@ -16,12 +16,12 @@ router = APIRouter(
 
 
 @router.get('/')
-async def get_branches() -> list[BranchDTO]:
-    branchs = await BranchService.get_branches()
+async def get_branches(studio_id: int) -> list[BranchDTO]:
+    branchs = await BranchService.get_branches(studio_id)
     return branchs
 
 
-@router.post('/', response_model=BranchDTO)
+@router.post('/', response_model=BranchDTO, status_code=201)
 async def add_branch(
     branch: BranchAddDTO,
 ) -> BranchDTO:
@@ -38,7 +38,7 @@ async def add_branch(
 )
 async def get_branch(branch_id: int) -> BranchDTO:
     try:
-        branch = await BranchService.get_Branch(branch_id)
+        branch = await BranchService.get_branch(branch_id)
         return branch
     except ObjectNotFoundException:
         return JSONResponse(status_code=404, content=None)
@@ -46,7 +46,7 @@ async def get_branch(branch_id: int) -> BranchDTO:
 
 @router.patch('/{branch_id}')
 async def change_branch(
-    branch: BranchAddDTO,
+    branch: BranchChangeDTO,
     branch_id: int,
 ) -> BranchDTO:
     try:
@@ -63,7 +63,7 @@ async def delete_branch(
     branch_id: int,
 ) -> None:
     try:
-        await BranchService.delete_Branch(branch_id)
-        return JSONResponse(status_code=410, content=None)
+        await BranchService.delete_branch(branch_id)
+        return JSONResponse(status_code=204, content=None)
     except ObjectNotFoundException:
         return JSONResponse(status_code=404, content=None)

@@ -21,7 +21,7 @@ async def get_rooms() -> list[RoomDTO]:
     return rooms
 
 
-@router.post('/', response_model=RoomDTO)
+@router.post('/', response_model=RoomDTO, status_code=201)
 async def add_room(
     room: RoomAddDTO,
 ) -> RoomDTO:
@@ -64,6 +64,6 @@ async def delete_Room(
 ) -> None:
     try:
         await RoomService.delete_room(room_id)
-        return JSONResponse(status_code=410, content=None)
+        return JSONResponse(status_code=204, content=None)
     except ObjectNotFoundException:
         return JSONResponse(status_code=404, content=None)

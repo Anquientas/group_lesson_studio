@@ -3,16 +3,20 @@ from sqlalchemy import func, select
 
 from database import new_async_session
 
-from exceptions import ObjectNotFoundException
+from ..exceptions import ObjectNotFoundException
 from .models import Branch
-from .schemas import BranchAddDTO, BranchDTO
+from .schemas import BranchAddDTO, BranchDTO, BranchChangeDTO
 
 
 class BranchRepository:
     @classmethod
     async def get_count_by_name(cls, data: BranchAddDTO) -> int:
         async with new_async_session() as session:
-            query = select(func.count()).filter(Branch.name == data.name)
+            query = select(func.count()).filter(
+                Branch.name == data.name,
+                Branch.studio_id == data.studio_id,
+                Branch.is_active
+            )
             number = await session.execute(query)
             return number.scalars().all()[0]
 
@@ -26,9 +30,12 @@ class BranchRepository:
             return branch
 
     @classmethod
-    async def get_branches(cls) -> list[BranchDTO]:
+    async def get_branches(cls, studio_id: int) -> list[BranchDTO]:
         async with new_async_session() as session:
-            query = select(Branch).filter(Branch.is_active)
+            query = select(Branch).filter(
+                Branch.studio_id == studio_id,
+                Branch.is_active
+            )
             result = await session.execute(query)
             branches = result.scalars().all()
             return branches
@@ -48,7 +55,7 @@ class BranchRepository:
     async def change_branch(
         cls,
         branch_id: int,
-        data: BranchAddDTO
+        data: BranchChangeDTO
     ) -> Optional[BranchDTO]:
         async with new_async_session() as session:
             query = select(Branch).filter(
@@ -58,6 +65,7 @@ class BranchRepository:
             result = await session.execute(query)
             branch = result.scalars().one()
             branch.name = data.name
+            branch.address = data.address
             await session.commit()
             return branch
 

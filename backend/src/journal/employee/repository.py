@@ -36,8 +36,8 @@ class EmployeeRepository:
                 Employee.is_active
             )
             result = await session.execute(query)
-            list_employee = result.scalars().all()
-            return list_employee
+            employees = result.scalars().all()
+            return employees
 
     @classmethod
     async def get_employees_by_role(cls, role_id: int) -> list[EmployeeDTO]:
