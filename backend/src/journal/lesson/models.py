@@ -54,4 +54,4 @@ class LessonStudent(Model):
     added_at:  Mapped[datetime] = mapped_column(
         server_default=text('TIMEZONE("utc", now())')
     )
-    excluded_at: Mapped[TIMESTAMP]
+    excluded_at: Mapped[bool]
