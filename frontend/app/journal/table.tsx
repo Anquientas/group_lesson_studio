@@ -23,6 +23,11 @@ async function getData() {
    
     const raw = await res.json()
     console.log('raw', raw)
+    let a = [{}, {}];
+    a.map((item: any): Studio => {return new Studio(raw.id, raw.name)});
+    a.map((item) => new Studio(raw.id, raw.name));
+    a.forEach((item: any) => {console.log(item.id);})
+
     return new Studio(raw.id, raw.name);
   }
 
@@ -31,6 +36,8 @@ async function getData() {
 const Table = () => {
 
     const [studio, setStudio] = useState<Studio|null>(null)
+    // const [studios, setStudios] = useState<Studio[]>([]) // Array<Studio>
+    // const [studios, setStudios] = useState<Array<Studio>>([]) // Array<Studio>
     useEffect(() => {
         const dataFetch = async () => {
             const data = await getData();
@@ -50,8 +57,14 @@ const Table = () => {
     }
     return (
         <>
-            <div>{studio.name}</div>
-            <div>{studio.id}</div>
+            {[studio].map((item) => (
+                <>
+                    <div>{item.name}</div>
+                    <div>{item.id}</div>
+                </>
+            ))}
+            {/* <div>{studio.name}</div>
+            <div>{studio.id}</div> */}
             {/* {studio ? <></> : <></>} */}
         </>
     );
