@@ -60,6 +60,9 @@ const Journal = () => {
                     </div>
                 </>
             ))}
+            <div>
+                <Link href={`./studios/creation`}>Добавить студию</Link>
+            </div>
         </>
     );
 }

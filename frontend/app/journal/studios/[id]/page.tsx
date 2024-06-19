@@ -55,7 +55,7 @@ const Journal = () => {
             </div>
             <div>
                 <span>Действия: </span>
-                <Link href={`./`}>Редактировать</Link>
+                <Link href={`./editing`}>Редактировать</Link>
                 <span>   </span>
                 <Link href={`./`}>Удалить</Link>
             </div>
