@@ -1,10 +1,8 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..employee.models import Gender
-
 
 # DTO = Data Transfer Object
-class ClassAddDTO(BaseModel):
+class GroupAddDTO(BaseModel):
     branch_id: int = Field(title='Филиал')
     teacher_id: int = Field(title='Преподаватель')
     name: str = Field(max_length=100, title='Название')
@@ -14,11 +12,11 @@ class ClassAddDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ClassDTO(ClassAddDTO):
+class GroupDTO(GroupAddDTO):
     id: int
 
 
-class ClassChangeDTO(BaseModel):
+class GroupChangeDTO(BaseModel):
     branch_id: int = Field(title='Филиал')
     teacher_id: int = Field(title='Преподаватель')
     name: str = Field(max_length=100, title='Название')
@@ -26,7 +24,7 @@ class ClassChangeDTO(BaseModel):
     age_max: int = Field(title='Максимальный возраст')
 
 
-class ClassStudentAddDTO(BaseModel):
+class GroupStudentAddDTO(BaseModel):
     class_id: int = Field(title='Группа')
     student_id: int = Field(title='Ученик')
 

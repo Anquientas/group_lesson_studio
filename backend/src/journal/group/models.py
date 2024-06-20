@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, TIMESTAMP, text
+from sqlalchemy import ForeignKey, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Model
 
 
-class Class(Model):
-    __tablename__ = 'class'
+class Group(Model):
+    __tablename__ = 'group'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     branch_id: Mapped[int] = mapped_column(ForeignKey('branch.id'))
@@ -21,10 +21,10 @@ class Class(Model):
     is_active: Mapped[bool] = mapped_column(default=True)
 
 
-class ClassStudent(Model):
-    __tablename__ = 'class_student'
+class GroupStudent(Model):
+    __tablename__ = 'group_student'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    class_id: Mapped[int] = mapped_column(ForeignKey('class.id'))
+    group_id: Mapped[int] = mapped_column(ForeignKey('class.id'))
     student_id: Mapped[int] = mapped_column(ForeignKey('student.id'))
     is_excluded: Mapped[bool] = mapped_column(default=False)
