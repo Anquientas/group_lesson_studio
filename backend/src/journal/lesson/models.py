@@ -1,7 +1,7 @@
 from datetime import datetime
 import enum
 
-from sqlalchemy import ForeignKey, String, TIMESTAMP, TIME, DATE, text
+from sqlalchemy import ForeignKey, String, TIME, DATE, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Model
@@ -17,7 +17,7 @@ class LessonType(Model):
     __tablename__ = 'lesson_type'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    type: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
 
 
 class Lesson(Model):
@@ -25,7 +25,7 @@ class Lesson(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     type_id: Mapped[int] = mapped_column(ForeignKey('type.id'))
-    class_id: Mapped[int] = mapped_column(ForeignKey('class.id'))
+    group_id: Mapped[int] = mapped_column(ForeignKey('group.id'))
     room_id: Mapped[int] = mapped_column(ForeignKey('room.id'))
     date: Mapped[DATE]
     time_start: Mapped[TIME]
@@ -33,8 +33,7 @@ class Lesson(Model):
     created_at:  Mapped[datetime] = mapped_column(
         server_default=text('TIMEZONE("utc", now())')
     )
-    changed_at: Mapped[TIMESTAMP]
-    status_id: Mapped[LessonStatus]
+    status: Mapped[LessonStatus]
 
 
 class StudentVisit(Model):
@@ -54,4 +53,4 @@ class LessonStudent(Model):
     added_at:  Mapped[datetime] = mapped_column(
         server_default=text('TIMEZONE("utc", now())')
     )
-    excluded_at: Mapped[bool]
+    exclusion: Mapped[bool]

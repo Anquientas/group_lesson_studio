@@ -2,10 +2,12 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .models import LessonStatus
+
 
 # DTO = Data Transfer Object
 class LessonTypeAddDTO(BaseModel):
-    type: str = Field(max_length=100, title='Тип урока')
+    name: str = Field(max_length=100, title='Тип урока')
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -15,12 +17,12 @@ class LessonTypeDTO(LessonTypeAddDTO):
 
 
 class LessonTypeChangeDTO(BaseModel):
-    type: str = Field(max_length=100, title='Тип урока')
+    name: str = Field(max_length=100, title='Тип урока')
 
 
 class LessonAddDTO(BaseModel):
     type_id: int = Field(title='Тип урока')
-    class_id: int = Field(title='Группа')
+    group_id: int = Field(title='Группа')
     room_id: int = Field(title='Помещение')
     date: datetime.date = Field(title='Дата')
     time_start: datetime.time = Field(title='Начало')
@@ -41,6 +43,7 @@ class LessonChangeDTO(BaseModel):
     date: datetime.date = Field(title='Дата')
     time_start: datetime.time = Field(title='Начало')
     time_end: datetime.time = Field(title='Окончание')
+    status: LessonStatus = Field(title='Статус')
 
 
 class StudentVisitAddDTO(BaseModel):
