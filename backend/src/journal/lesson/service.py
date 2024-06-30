@@ -1,7 +1,5 @@
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from typing import Optional
+
 from .repository import (
     LessonRepository,
     LessonStudentRepository,
@@ -24,128 +22,216 @@ from .schemas import (
 )
 
 
-class LessonTypeService:
-    @staticmethod
-    async def get_lesson_types() -> list[LessonTypeDTO]:
-        lesson_types = await LessonTypeRepository.get_lesson_types()
-        return lesson_types
-
-    @staticmethod
-    async def add_lesson_type(data: LessonTypeAddDTO) -> LessonTypeDTO:
-        lesson_type = await LessonTypeRepository.add_lesson_type(data)
-        return lesson_type
-
-    @staticmethod
-    async def get_lesson_type(lessson_type_id: int) -> LessonTypeDTO:
-        lesson_type = await LessonTypeRepository.get_lesson_type(
-            lessson_type_id
-        )
-        if not lesson_type:
-            raise ObjectNotFoundException
-        return lesson_type
-
-    @staticmethod
-    async def change_lesson_type(
-        lesson_type_id: int,
-        data: LessonTypeChangeDTO
-    ) -> LessonTypeDTO:
-        lesson_type = await LessonTypeRepository.get_lesson_type(
-            lesson_type_id
-        )
-        if not lesson_type:
-            raise ObjectNotFoundException
-        lesson_type_new = await LessonTypeRepository.change_lesson_type(
-            lesson_type_id,
-            data
-        )
-        return lesson_type_new
-
-
-class StudentVisitService:
-    @staticmethod
-    async def get_student_visits() -> list[StudentVisitDTO]:
-        student_visits = await StudentVisitRepository.get_student_visit()
-        return student_visits
-
-    @staticmethod
-    async def add_student_visit(data: StudentVisitAddDTO) -> StudentVisitDTO:
-        student_visit = await StudentVisitRepository.add_student_visit(data)
-        return student_visit
-
-    @staticmethod
-    async def get_student_visit(student_visit_id: int) -> LessonTypeDTO:
-        student_visit = await StudentVisitRepository.get_student_visit(
-            student_visit_id
-        )
-        if not student_visit:
-            raise ObjectNotFoundException
-        return student_visit
-
-    @staticmethod
-    async def change_student_visit(
-        student_visit_id: int,
-        data: StudentVisitChangeDTO
-    ) -> LessonTypeDTO:
-        student_visit = await StudentVisitRepository.get_student_visit(
-            student_visit_id
-        )
-        if not student_visit:
-            raise ObjectNotFoundException
-        student_visit_new = await StudentVisitRepository.change_student_visit(
-            student_visit_id,
-            data
-        )
-        return student_visit_new
-
-
 class LessonService:
     @staticmethod
-    async def get_lessons() -> list[LessonDTO]:
-        lessons = await LessonRepository.get_lessons()
-        return lessons
+    async def get_items(session) -> list[LessonDTO]:
+        items = await LessonRepository.get_items(session=session)
+        return items
 
     @staticmethod
-    async def add_lesson(data: LessonAddDTO) -> LessonDTO:
-        lesson = await LessonRepository.add_lesson(data)
-        return lesson
+    async def get_item(
+        session,  # : AsyncSession,
+        id: int
+    ) -> LessonDTO:
+        item = await LessonRepository.get_item(
+            session=session,
+            id=id
+        )
+        return item
 
     @staticmethod
-    async def get_lesson(id_lesson: int) -> LessonDTO:
-        lesson = await LessonRepository.get_lesson(id_lesson)
-        if not lesson:
-            raise ObjectNotFoundException
-        return lesson
+    async def get_item_by_fields(
+        session,  # : AsyncSession,
+        data: LessonDTO
+    ) -> LessonDTO:
+        item = await LessonRepository.get_item_by_fields(
+            session=session,
+            data=data
+        )
+        return item
 
     @staticmethod
-    async def change_lesson(
-        id_lesson: int,
+    async def add_item(
+        session,  # : AsyncSession,
+        data: LessonAddDTO
+    ) -> LessonDTO:
+        item = await LessonRepository.add_item(
+            session=session,
+            data=data
+        )
+        return item
+
+    @staticmethod
+    async def change_item(
+        session,
+        id: int,
         data: LessonChangeDTO
     ) -> LessonDTO:
-        lesson = await LessonRepository.get_lesson(id_lesson)
-        if not lesson:
-            raise ObjectNotFoundException
-        lesson_new = await LessonRepository.change_lesson(
-            id_lesson,
-            data
+        item_new = await LessonRepository.change_item(
+            session=session,
+            id=id,
+            data=data
         )
-        return lesson_new
+        return item_new
+
+
+class LessonTypeService:
+    @staticmethod
+    async def get_items(session) -> list[LessonTypeDTO]:
+        items = await LessonTypeRepository.get_items(
+            session=session
+        )
+        return items
+
+    @staticmethod
+    async def add_item(
+        session,
+        data: LessonTypeAddDTO
+    ) -> LessonTypeDTO:
+        item = await LessonTypeRepository.add_item(
+            session=session,
+            data=data
+        )
+        return item
+
+    @staticmethod
+    async def get_item(
+        session,
+        id: int
+    ) -> Optional[LessonTypeDTO]:
+        item = await LessonTypeRepository.get_item(
+            session=session,
+            id=id
+        )
+        return item
+
+    @staticmethod
+    async def get_item_by_fields(
+        session,
+        data: LessonTypeAddDTO
+    ) -> Optional[LessonTypeDTO]:
+        item = await LessonTypeRepository.get_item_by_fields(
+            session=session,
+            data=data
+        )
+        return item
+
+    @staticmethod
+    async def change_item(
+        session,
+        id: int,
+        data: LessonTypeChangeDTO
+    ) -> LessonTypeDTO:
+        item = await LessonTypeRepository.change_item(
+            session=session,
+            id=id,
+            data=data
+        )
+        return item
 
 
 class LessonStudentService:
     @staticmethod
-    async def add_student_in_lesson(id_lesson: int, id_student: int):
-        lesson_student = await LessonStudentRepository.add_student_in_lesson(
-            id_lesson,
-            id_student
+    async def get_relations(
+        session,
+        id_lesson: int,
+    ):
+        relations = await LessonStudentRepository.get_relations(
+            session=session,
+            id_lesson=id_lesson,
         )
-        return lesson_student
+        return relations
 
     @staticmethod
-    async def excluded_student_from_lesson(id_lesson: int, id_student: int):
-        lesson_student = (
-            await LessonStudentRepository.excluded_student_from_lesson(
-                id_lesson,
-                id_student
-            )
+    async def get_relation(
+        session,
+        id_lesson: int,
+        id_student: int,
+    ):
+        relation = await LessonStudentRepository.get_relation(
+            session=session,
+            id_lesson=id_lesson,
+            id_student=id_student
         )
-        return lesson_student
+        return relation
+
+    @staticmethod
+    async def add_relation(
+        session,
+        id_lesson: int,
+        id_student: int,
+    ):
+        relation = await LessonStudentRepository.add_relation(
+            session=session,
+            id_lesson=id_lesson,
+            id_student=id_student
+        )
+        return relation
+
+    @staticmethod
+    async def delete_relation(
+        session,
+        id_lesson: int,
+        id_student: int,
+    ):
+        relation = await LessonStudentRepository.delete_relation(
+            session=session,
+            id_lesson=id_lesson,
+            id_student=id_student
+        )
+        return relation
+
+
+class StudentVisitService:
+    @staticmethod
+    async def get_items(session) -> list[StudentVisitDTO]:
+        items = await StudentVisitRepository.get_items(
+            session=session
+        )
+        return items
+
+    @staticmethod
+    async def get_item(
+        session,
+        id: int
+    ) -> LessonTypeDTO:
+        item = await StudentVisitRepository.get_item(
+            session=session,
+            id=id
+        )
+        return item
+
+    @staticmethod
+    async def get_item_by_fields(
+        session,
+        data: LessonTypeAddDTO
+    ) -> LessonTypeDTO:
+        item = await StudentVisitRepository.get_item_by_fields(
+            session=session,
+            data=data
+        )
+        return item
+
+    @staticmethod
+    async def add_item(
+        session,
+        data: StudentVisitAddDTO
+    ) -> StudentVisitDTO:
+        item = await StudentVisitRepository.add_item(
+            session=session,
+            data=data
+        )
+        return item
+
+    @staticmethod
+    async def change_item(
+        session,
+        id: int,
+        data: StudentVisitChangeDTO
+    ) -> LessonTypeDTO:
+        item = await StudentVisitRepository.change_item(
+            session=session,
+            id=id,
+            data=data
+        )
+        return item

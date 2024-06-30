@@ -1,10 +1,9 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from ...database import new_async_session
 from .service import (
     LessonService,
     LessonStudentService,
@@ -33,21 +32,29 @@ router = APIRouter(
 )
 
 
-@router.get('/')
+@router.get('')
 async def get_lessons() -> list[LessonDTO]:
-    lessons = await LessonService.get_lessons()
-    return lessons
+    async with new_async_session() as session:
+        items = await LessonService.get_items(session)
+        return items
 
 
-@router.post('/', response_model=LessonDTO, status_code=201)
-async def add_group(
-    lesson: LessonAddDTO,
+@router.post('', response_model=LessonDTO, status_code=201)
+async def add_lesson(
+    data: LessonAddDTO,
 ) -> LessonDTO:
-    try:
-        lesson = await LessonService.add_lesson(lesson)
-        return lesson
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
+    async with new_async_session() as session:
+        item_check = await LessonService.get_item_by_fields(
+            session=session,
+            data=data
+        )
+        if item_check:
+            return JSONResponse(status_code=400, content=None)
+        item_add = await LessonService.add_item(
+            session=session,
+            data=data
+        )
+        return item_add
 
 
 @router.get(
@@ -55,11 +62,14 @@ async def add_group(
     response_model=LessonDTO
 )
 async def get_lesson(lesson_id: int) -> LessonDTO:
-    try:
-        lesson = await LessonService.get_lesson(lesson_id)
-        return lesson
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+    async with new_async_session() as session:
+        item = await LessonService.get_item(
+            session=session,
+            id=lesson_id
+        )
+        if not item:
+            return JSONResponse(status_code=404, content=None)
+        return item
 
 
 @router.patch('/{lesson_id}')
@@ -67,126 +77,207 @@ async def change_lesson(
     lesson: LessonChangeDTO,
     lesson_id: int,
 ) -> LessonDTO:
-    try:
-        lesson = await LessonService.change_lesson(lesson_id)
-        return lesson
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+    async with new_async_session() as session:
+        item_check = await LessonService.get_item(
+            session=session,
+            id=lesson_id
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        item = await LessonService.change_item(
+            session=session,
+            id=lesson_id,
+            data=lesson
+        )
+        return item
 
 
-@router.post('/{lesson_id}/student')
-async def add_student_in_lesson(lesson_id: int, student_id: int):
-    lesson_student = await LessonStudentService.add_student_in_lesson(
-        lesson_id,
-        student_id
-    )
-    return lesson_student
-
-
-@router.delete('/{lesson_id}/student')
-async def excluded_student_from_lesson(lesson_id: int, student_id: int):
-    lesson_student = await LessonStudentService.excluded_student_from_lesson(
-        lesson_id,
-        student_id
-    )
-    return lesson_student
-
-
-@router.get('/student_visit')
-async def get_student_visits() -> list[StudentVisitDTO]:
-    student_visits = await StudentVisitService.get_student_visits()
-    return student_visits
+@router.get('/types')
+async def get_lesson_types() -> list[LessonTypeDTO]:
+    async with new_async_session() as session:
+        items = await LessonTypeService.get_items(session=session)
+        return items
 
 
 @router.post(
-    '/student_visit',
+    '/types',
+    response_model=LessonTypeDTO,
+    status_code=201
+)
+async def add_lesson_type(
+    data: LessonTypeAddDTO,
+) -> LessonTypeDTO:
+    async with new_async_session() as session:
+        item_check = await LessonTypeService.get_item_by_fields(
+            session=session,
+            data=data
+        )
+        if item_check:
+            return JSONResponse(status_code=400, content=None)
+        item = await LessonTypeService.add_item(data)
+        return item
+
+
+@router.get(
+    '/types/{type_id}',
+    response_model=LessonTypeDTO
+)
+async def get_lesson_type(type_id: int) -> LessonTypeDTO:
+    async with new_async_session() as session:
+        item = await LessonTypeService.get_item(
+            session=session,
+            id=type_id
+        )
+        if not item:
+            return JSONResponse(status_code=404, content=None)
+        return item
+
+
+@router.patch('/types/{type_id}')
+async def change_lesson_type(
+    data: LessonTypeChangeDTO,
+    type_id: int,
+) -> LessonTypeDTO:
+    async with new_async_session() as session:
+        item = await LessonTypeService.get_item(
+            session=session,
+            id=type_id
+        )
+        if not item:
+            return JSONResponse(status_code=404, content=None)
+        item = await LessonTypeService.change_item(
+            session=session,
+            id=type_id
+        )
+        return item
+
+
+@router.get('/{lesson_id}/students')
+async def get_students_in_lesson(
+    lesson_id: int
+):
+    async with new_async_session() as session:
+        relations = await LessonStudentService.get_relations(
+            session=session,
+            lesson_id=lesson_id,
+        )
+        return relations
+
+
+@router.get('/{lesson_id}/students/{student_id}')
+async def get_student_in_lesson(
+    lesson_id: int,
+    student_id: int
+):
+    async with new_async_session() as session:
+        relation = await LessonStudentService.get_relation(
+            session=session,
+            lesson_id=lesson_id,
+            student_id=student_id
+        )
+        return relation
+
+
+@router.post('/{lesson_id}/students/{student_id}')
+async def add_student_in_lesson(
+    lesson_id: int,
+    student_id: int
+):
+    async with new_async_session() as session:
+        relation_check = await LessonStudentService.get_relation(
+            session=session,
+            lesson_id=lesson_id,
+            student_id=student_id
+        )
+        if relation_check:
+            return JSONResponse(status_code=400, content=None)
+        relation = await LessonStudentService.add_relation(
+            session=session,
+            lesson_id=lesson_id,
+            student_id=student_id
+        )
+        return relation
+
+
+@router.delete('/{lesson_id}/students/{student_id}')
+async def excluded_student_from_lesson(
+    lesson_id: int,
+    student_id: int
+):
+    async with new_async_session() as session:
+        relation_check = await LessonStudentService.get_relation(
+            session=session,
+            lesson_id=lesson_id,
+            student_id=student_id
+        )
+        if not relation_check:
+            return JSONResponse(status_code=404, content=None)
+        relation = await LessonStudentService.delete_relation(
+            session=session,
+            lesson_id=lesson_id,
+            student_id=student_id
+        )
+        return relation
+
+
+@router.get('/student_visit_types')
+async def get_student_visit_types() -> list[StudentVisitDTO]:
+    async with new_async_session() as session:
+        items = await StudentVisitService.get_items(
+            session=session
+        )
+        return items
+
+
+@router.post(
+    '/student_visits_types',
     response_model=StudentVisitDTO,
     status_code=201
 )
-async def add_student_visit(
-    student_visit: StudentVisitAddDTO,
+async def add_student_visit_type(
+    data: StudentVisitAddDTO
 ) -> StudentVisitDTO:
-    try:
-        student_visit = await StudentVisitService.add_student_visit(
-            student_visit
+    async with new_async_session() as session:
+        item_check = await StudentVisitService.get_item_by_fields(
+            session=session,
+            data=data
         )
-        return student_visit
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-
-
-@router.get(
-    'student_visit/{student_visit_id}',
-    response_model=StudentVisitDTO
-)
-async def get_student_visit(student_visit_id: int) -> StudentVisitDTO:
-    try:
-        student_visit = await StudentVisitService.get_student_visit(
-            student_visit_id
+        if item_check:
+            return JSONResponse(status_code=400, content=None)
+        item = await StudentVisitService.add_item(
+            session=session,
+            data=data
         )
-        return student_visit
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+        return item
 
 
-@router.patch('student_visit/{student_visit_id}')
-async def change_student_visit(
-    student_visit: StudentVisitChangeDTO,
-    student_visit_id: int,
+@router.get('/student_visit_types/{type_id}')
+async def get_student_visit_type(
+    type_id: int
+) -> Optional[StudentVisitDTO]:
+    async with new_async_session() as session:
+        item = await StudentVisitService.get_item(
+            session=session,
+            id=type_id
+        )
+        return item
+
+
+@router.patch('/student_visit_types/{type_id}')
+async def change_student_visit_type(
+    type_id: int,
+    data: StudentVisitChangeDTO
 ) -> StudentVisitDTO:
-    try:
-        student_visit = await StudentVisitService.change_student_visit(
-            student_visit_id
+    async with new_async_session() as session:
+        item_check = await StudentVisitService.get_item(
+            session=session,
+            id=type_id
         )
-        return student_visit
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
-
-
-@router.get('/lesson_type')
-async def get_lesson_types() -> list[LessonTypeDTO]:
-    lesson_types = await LessonTypeService.get_lesson_types()
-    return lesson_types
-
-
-@router.post('/lesson_type', response_model=LessonTypeDTO, status_code=201)
-async def add_lesson_type(
-    lesson_type: LessonTypeAddDTO,
-) -> LessonTypeDTO:
-    try:
-        lesson_type = await LessonTypeService.add_lesson_type(lesson_type)
-        return lesson_type
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-
-
-@router.get(
-    'lesson_type/{lesson_type_id}',
-    response_model=LessonTypeDTO
-)
-async def get_lesson_type(lesson_type_id: int) -> LessonTypeDTO:
-    try:
-        lesson_type = await LessonTypeService.get_lesson_type(lesson_type_id)
-        return lesson_type
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
-
-
-@router.patch('lesson_type/{lesson_type_id}')
-async def change_lesson_type(
-    lesson_type: LessonTypeChangeDTO,
-    lesson_type_id: int,
-) -> LessonTypeDTO:
-    try:
-        lesson_type = await LessonTypeService.change_lesson_type(
-            lesson_type_id
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        item = await StudentVisitService.change_item(
+            session=session,
+            id=type_id,
+            data=data
         )
-        return lesson_type
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+        return item
