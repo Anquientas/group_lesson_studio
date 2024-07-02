@@ -1,12 +1,15 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from ...database import new_async_session
 from .service import StudioService
-from .schemas import StudioAddDTO, StudioDTO
+from .schemas import (
+    StudioDTO,
+    StudioAddDTO,
+    StudioChangeDTO
+)
 
 
 router = APIRouter(
@@ -15,55 +18,83 @@ router = APIRouter(
 )
 
 
-@router.get('/')
-async def get_studios() -> list[StudioDTO]:
-    studios = await StudioService.get_studios()
-    return studios
+@router.get('')
+async def get_studios() -> Optional[list[StudioDTO]]:
+    async with new_async_session() as session:
+        items = await StudioService.get_studios(session=session)
+        return items
 
 
-@router.post('/', response_model=StudioDTO, status_code=201)
-async def add_studio(
-    studio: StudioAddDTO,
-) -> StudioDTO:
-    try:
-        studio = await StudioService.add_studio(studio)
-        return studio
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-
-
-@router.get(
-    '/{studio_id}',
-    response_model=StudioDTO
+@router.post(
+    '',
+    response_model=StudioDTO,
+    status_code=201
 )
-async def get_studio(studio_id: int) -> StudioDTO:
-    try:
-        studio = await StudioService.get_studio(studio_id)
-        return studio
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+async def add_studio(
+    data: StudioAddDTO
+) -> Optional[StudioDTO]:
+    async with new_async_session() as session:
+        item_check = await StudioService.get_item_by_fields(
+            session=session,
+            data=data
+        )
+        if item_check:
+            return JSONResponse(status_code=400, content=None)
+        item = await StudioService.add_item(
+            session=session,
+            data=data
+        )
+        return item
+
+
+@router.get('/{studio_id}')
+async def get_studio(studio_id: int) -> Optional[StudioDTO]:
+    async with new_async_session() as session:
+        item = await StudioService.get_item(
+            session=session,
+            id=studio_id
+        )
+        if not item:
+            return JSONResponse(status_code=404, content=None)
+        return item
 
 
 @router.patch('/{studio_id}')
 async def change_studio(
-    studio: StudioAddDTO,
+    data: StudioChangeDTO,
     studio_id: int,
-) -> StudioDTO:
-    try:
-        studio = await StudioService.change_studio(studio_id, studio)
-        return studio
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+) -> Optional[StudioDTO]:
+    async with new_async_session() as session:
+        item_check = await StudioService.get_item(
+            session=session,
+            id=studio_id
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        item = await StudioService.change_item(
+            session=session,
+            id=studio_id,
+            data=data
+        )
+        return item
 
 
-@router.delete('/{studio_id}')
+@router.delete(
+    '/{studio_id}',
+    status_code=204
+)
 async def delete_studio(
     studio_id: int,
-) -> None:
-    try:
-        await StudioService.delete_studio(studio_id)
-        return JSONResponse(status_code=204, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+):
+    async with new_async_session() as session:
+        item_check = await StudioService.get_item(
+            session=session,
+            id=studio_id
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        item = await StudioService.delete_item(
+            session=session,
+            id=studio_id
+        )
+        return item

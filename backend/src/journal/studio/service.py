@@ -1,50 +1,84 @@
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from typing import Optional
+
 from .repository import StudioRepository
 from .schemas import (
     StudioDTO,
-    StudioAddDTO
+    StudioAddDTO,
+    StudioChangeDTO
 )
+from ..branch.service import BranchService
 
 
 class StudioService:
     @staticmethod
-    async def get_studios() -> list[StudioDTO]:
-        studios = await StudioRepository.get_studios()
-        return studios
+    async def get_items(session) -> list[StudioDTO]:
+        items = await StudioRepository.get_items(
+            session=session
+        )
+        return items
 
     @staticmethod
-    async def add_studio(data: StudioAddDTO) -> StudioDTO:
-        number = await StudioRepository.get_count_by_name(data)
-        if number > 0:
-            raise ObjectAlreadyExistsException
-        studio = await StudioRepository.add_studio(data)
-        return studio
+    async def get_item(
+        session,  # : AsyncSession,
+        id: int
+    ) -> Optional[StudioDTO]:
+        item = await StudioRepository.get_item(
+            session=session,
+            id=id
+        )
+        return item
 
     @staticmethod
-    async def get_studio(studio_id: int) -> StudioDTO:
-        studio = await StudioRepository.get_studio(studio_id)
-        if not studio:
-            raise ObjectNotFoundException
-        return studio
+    async def get_item_by_fields(
+        session,  # : AsyncSession,
+        data: StudioAddDTO
+    ) -> Optional[StudioDTO]:
+        item = await StudioRepository.get_item_by_fields(
+            session=session,
+            data=data
+        )
+        return item
 
     @staticmethod
-    async def change_studio(
-        studio_id: int,
+    async def add_item(
+        session,  # : AsyncSession,
         data: StudioAddDTO
     ) -> StudioDTO:
-        studio = await StudioRepository.get_studio(studio_id)
-        if not studio:
-            raise ObjectNotFoundException
-        number = await StudioRepository.get_count_by_name(data)
-        if number > 0 and studio.name != data.name:
-            raise ObjectAlreadyExistsException
-        studio = await StudioRepository.change_studio(studio_id, data)
-        return studio
+        item = await StudioRepository.add_item(
+            session=session,
+            data=data
+        )
+        return item
 
     @staticmethod
-    async def delete_studio(studio_id: int) -> StudioDTO:
-        studio = await StudioRepository.delete_studio(studio_id)
-        return studio
+    async def change_item(
+        session,
+        id: int,
+        data: StudioChangeDTO
+    ) -> StudioDTO:
+        item_new = await StudioRepository.change_item(
+            session=session,
+            id=id,
+            data=data
+        )
+        return item_new
+
+    @staticmethod
+    async def delete_item(
+        session,
+        id: int,
+    ):
+        item_dependent_ids = await BranchService.get_item_ids(
+            session=session,
+            id=id
+        )
+        for item_dependent_id in item_dependent_ids:
+            BranchService.delete_item(
+                session=session,
+                id=item_dependent_id
+            )
+        item = await StudioRepository.delete_item(
+            session=session,
+            id=id
+        )
+        return item

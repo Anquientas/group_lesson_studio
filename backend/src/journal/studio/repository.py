@@ -1,79 +1,92 @@
 from typing import Optional
-from sqlalchemy import func, select
 
-from database import new_async_session
-from ..exceptions import ObjectNotFoundException
+from sqlalchemy import select
+
 from .models import Studio
 from .schemas import StudioAddDTO, StudioDTO
 
 
 class StudioRepository:
     @classmethod
-    async def get_count_by_name(cls, data: StudioAddDTO) -> int:
-        async with new_async_session() as session:
-            query = select(func.count()).filter(
-                Studio.name == data.name,
-                Studio.is_active
-            )
-            number = await session.execute(query)
-            return number.scalars().all()[0]
-
-    @classmethod
-    async def add_studio(cls, data: StudioAddDTO) -> StudioDTO:
-        async with new_async_session() as session:
-            studio_dict = data.model_dump()
-            studio = Studio(**studio_dict)
-            session.add(studio)
-            await session.commit()
-            return studio
-
-    @classmethod
-    async def get_studios(cls) -> list[StudioDTO]:
-        async with new_async_session() as session:
-            query = select(Studio).filter(Studio.is_active)
-            result = await session.execute(query)
-            studios = result.scalars().all()
-            return studios
-
-    @classmethod
-    async def get_studio(cls, studio_id: int) -> Optional[StudioDTO]:
-        async with new_async_session() as session:
-            query = select(Studio).filter(
-                Studio.id == studio_id,
-                Studio.is_active
-            )
-            result = await session.execute(query)
-            studio = result.scalars().one_or_none()
-            return studio
-
-    @classmethod
-    async def change_studio(
+    async def get_items(
         cls,
-        studio_id: int,
-        data: StudioAddDTO
-    ) -> Optional[StudioDTO]:
-        async with new_async_session() as session:
-            query = select(Studio).filter(
-                Studio.id == studio_id,
-                Studio.is_active
-            )
-            result = await session.execute(query)
-            studio = result.scalars().one()
-            studio.name = data.name
-            await session.commit()
-            return studio
+        session
+    ) -> list[Studio]:
+        query = select(Studio).filter(Studio.is_active)
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
 
     @classmethod
-    async def delete_studio(cls, studio_id: int):
-        async with new_async_session() as session:
-            query = select(Studio).filter(
-                Studio.id == studio_id,
-                Studio.is_active
-            )
-            result = await session.execute(query)
-            studio = result.scalars().one_or_none()
-            if not studio:
-                raise ObjectNotFoundException
-            studio.is_active = False
-            await session.commit()
-            return studio
+    async def get_item(
+        cls,
+        session,
+        id: int
+    ) -> Optional[Studio]:
+        query = select(Studio).filter(
+            Studio.id == id,
+            Studio.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def get_item_by_fields(
+        cls,
+        session,
+        data: Studio
+    ) -> Optional[Studio]:
+        query = select(Studio).filter(
+            Studio.name == data.name,
+            Studio.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def add_item(
+        cls,
+        session,
+        data: Studio
+    ) -> Studio:
+        data_dict = data.model_dump()
+        item = Studio(**data_dict)
+        session.add(item)
+        await session.commit()
+        return item
+
+    @classmethod
+    async def change_item(
+        cls,
+        session,
+        id: int,
+        data: Studio
+    ) -> Optional[Studio]:
+        query = select(Studio).filter(
+            Studio.id == id,
+            Studio.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one()
+        if data.name and item.name != data.name:
+            item.name = data.name
+        await session.commit()
+        return item
+
+    @classmethod
+    async def delete_item(
+        cls,
+        session,
+        id: int
+    ):
+        query = select(Studio).filter(
+            Studio.id == id,
+            Studio.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        item.is_active = False
+        await session.commit()
+        return item

@@ -10,3 +10,7 @@ class StudioAddDTO(BaseModel):
 
 class StudioDTO(StudioAddDTO):
     id: int
+
+
+class StudioChangeDTO(BaseModel):
+    name: str = Field(max_length=50, title='Название студии')
