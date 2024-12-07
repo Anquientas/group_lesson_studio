@@ -12,6 +12,10 @@ from ..branch.service import BranchService
 class StudioService:
     @staticmethod
     async def get_items(session) -> list[StudioDTO]:
+        """
+        Метод получения списка студий.
+        """
+
         items = await StudioRepository.get_items(
             session=session
         )
@@ -22,6 +26,10 @@ class StudioService:
         session,  # : AsyncSession,
         id: int
     ) -> Optional[StudioDTO]:
+        """
+        Метод получения студии.
+        """
+
         item = await StudioRepository.get_item(
             session=session,
             id=id
@@ -29,13 +37,16 @@ class StudioService:
         return item
 
     @staticmethod
-    async def get_item_by_fields(
+    async def get_item_by_name(
         session,  # : AsyncSession,
-        data: StudioAddDTO
+        name: str
     ) -> Optional[StudioDTO]:
-        item = await StudioRepository.get_item_by_fields(
+        """
+        Метод получения студии по имени.
+        """
+        item = await StudioRepository.get_item_by_name(
             session=session,
-            data=data
+            name=name
         )
         return item
 
@@ -44,9 +55,14 @@ class StudioService:
         session,  # : AsyncSession,
         data: StudioAddDTO
     ) -> StudioDTO:
+        """
+        Метод добавления студии.
+        """
+
+        data_dict = data.model_dump()
         item = await StudioRepository.add_item(
             session=session,
-            data=data
+            data=data_dict
         )
         return item
 
@@ -56,10 +72,14 @@ class StudioService:
         id: int,
         data: StudioChangeDTO
     ) -> StudioDTO:
+        """
+        Метод изменения сведений о студии.
+        """
+
         item_new = await StudioRepository.change_item(
             session=session,
             id=id,
-            data=data
+            name=data.name
         )
         return item_new
 
@@ -68,15 +88,20 @@ class StudioService:
         session,
         id: int,
     ):
-        item_dependent_ids = await BranchService.get_item_ids(
+        """
+        Метод удаления студии.
+        Предварительное удаление филиалов.
+        """
+
+        await BranchService.delete_items_by_studio_id(
             session=session,
-            id=id
+            studio_id=id
         )
-        for item_dependent_id in item_dependent_ids:
-            BranchService.delete_item(
-                session=session,
-                id=item_dependent_id
-            )
+        # for item_dependent_id in item_dependent_ids:
+        #     BranchService.delete_item(
+        #         session=session,
+        #         id=item_dependent_id
+        #     )
         item = await StudioRepository.delete_item(
             session=session,
             id=id

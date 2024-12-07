@@ -1,80 +1,107 @@
 from typing import Optional
-from sqlalchemy import func, select
+from sqlalchemy import select
 
-from database import new_async_session
-
-from ..exceptions import ObjectNotFoundException
 from .models import Room
-from .schemas import RoomAddDTO, RoomDTO
 
 
 class RoomRepository:
     @classmethod
-    async def get_count_by_name(cls, data: RoomAddDTO) -> int:
-        async with new_async_session() as session:
-            query = select(func.count()).filter(
-                Room.name == data.name,
-                Room.is_active
-            )
-            number = await session.execute(query)
-            return number.scalars().all()[0]
-
-    @classmethod
-    async def add_room(cls, data: RoomAddDTO) -> RoomDTO:
-        async with new_async_session() as session:
-            room_dict = data.model_dump()
-            room = Room(**room_dict)
-            session.add(room)
-            await session.commit()
-            return room
-
-    @classmethod
-    async def get_rooms(cls) -> list[RoomDTO]:
-        async with new_async_session() as session:
-            query = select(Room).filter(Room.is_active)
-            result = await session.execute(query)
-            rooms = result.scalars().all()
-            return rooms
-
-    @classmethod
-    async def get_room(cls, room_id: int) -> Optional[RoomDTO]:
-        async with new_async_session() as session:
-            query = select(Room).filter(
-                Room.id == room_id,
-                Room.is_active
-            )
-            result = await session.execute(query)
-            room = result.scalars().one_or_none()
-            return room
-
-    @classmethod
-    async def change_room(
+    async def get_items(
         cls,
-        room_id: int,
-        data: RoomAddDTO
-    ) -> Optional[RoomDTO]:
-        async with new_async_session() as session:
-            query = select(Room).filter(
-                Room.id == room_id,
-                Room.is_active
-            )
-            result = await session.execute(query)
-            room = result.scalars().one()
-            room.name = data.name
-            await session.commit()
-            return room
+        session
+    ) -> list[Room]:
+        query = select(Room).filter(Room.is_active)
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
 
     @classmethod
-    async def delete_room(cls, room_id: int):
-        async with new_async_session() as session:
-            query = select(Room).filter(
-                Room.id == room_id,
-                Room.is_active
-            )
-            result = await session.execute(query)
-            room = result.scalars().one_or_none()
-            if not room:
-                raise ObjectNotFoundException
-            room.is_active = False
+    async def get_item(
+        cls,
+        session,
+        id: int
+    ) -> Optional[Room]:
+        query = select(Room).filter(
+            Room.id == id,
+            Room.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def get_item_by_name(
+        cls,
+        session,
+        name: str
+    ) -> Optional[Room]:
+        query = select(Room).filter(
+            Room.name == name,
+            Room.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def add_item(
+        cls,
+        session,
+        data: dict
+    ) -> Room:
+        item = Room(**data)
+        session.add(item)
+        await session.commit()
+        return item
+
+    @classmethod
+    async def change_item(
+        cls,
+        session,
+        id: int,
+        name: str
+    ) -> Optional[Room]:
+        query = select(Room).filter(
+            Room.id == id,
+            Room.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one()
+        if name and item.name != name:
+            item.name = name
+        await session.commit()
+        return item
+
+    @classmethod
+    async def delete_item(
+        cls,
+        session,
+        id: int
+    ):
+        query = select(Room).filter(
+            Room.id == id,
+            Room.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        item.is_active = False
+        await session.commit()
+        return item
+
+    @classmethod
+    async def delete_items_by_branch_id(
+        cls,
+        session,
+        branch_id: int,
+    ):
+        query = select(Room).filter(
+            Room.branch_id == branch_id,
+            Room.is_active
+        )
+        result = await session.execute(query)
+        items = result.scalars().all()
+        if items:
+            for item in items:
+                item.is_active = False
             await session.commit()
-            return room
+        return items

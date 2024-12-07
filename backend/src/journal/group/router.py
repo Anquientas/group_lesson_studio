@@ -1,87 +1,166 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from database import new_async_session
 from .service import GroupService, GroupStudentService
-from .schemas import GroupAddDTO, GroupDTO, GroupChangeDTO
+from .schemas import (
+    GroupDTO,
+    GroupAddDTO,
+    GroupChangeDTO,
+    GroupStudentDTO
+)
 
 
 router = APIRouter(
-    prefix='/classes',
-    tags=['classes']
+    prefix='/groups',
+    tags=['Groups']
 )
 
 
-@router.get('/')
+@router.get('')
 async def get_groups() -> list[GroupDTO]:
-    groups = await GroupService.get_groups()
-    return groups
+    async with new_async_session() as session:
+        items = await GroupService.get_items(session=session)
+        return items
 
 
-@router.post('/', response_model=GroupDTO, status_code=201)
+@router.post(
+    '',
+    response_model=GroupDTO,
+    status_code=201
+)
 async def add_group(
-    group: GroupAddDTO,
-) -> GroupDTO:
-    try:
-        group = await GroupService.add_group(group)
-        return group
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
+    data: GroupAddDTO
+):
+    async with new_async_session() as session:
+        item_check = await GroupService.get_item_by_name(
+            session=session,
+            name=data.name
+        )
+        if item_check:
+            return JSONResponse(status_code=400, content=None)
+        item = await GroupService.add_item(
+            session=session,
+            data=data
+        )
+        return item
 
 
 @router.get(
     '/{group_id}',
     response_model=GroupDTO
 )
-async def get_group(group_id: int) -> GroupDTO:
-    try:
-        group = await GroupService.get_group(group_id)
-        return group
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+async def get_group(group_id: int) -> Optional[GroupDTO]:
+    async with new_async_session() as session:
+        item = await GroupService.get_item(
+            session=session,
+            id=group_id
+        )
+        if not item:
+            return JSONResponse(status_code=404, content=None)
+        return item
 
 
-@router.patch('/{group_id}')
+@router.patch(
+    '/{group_id}',
+    response_model=GroupDTO
+)
 async def change_group(
-    group: GroupChangeDTO,
+    data: GroupChangeDTO,
     group_id: int,
-) -> GroupDTO:
-    try:
-        group = await GroupService.change_group(group_id)
-        return group
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+):
+    async with new_async_session() as session:
+        item_check = await GroupService.get_item(
+            session=session,
+            id=group_id,
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        item = await GroupService.change_item(
+            session=session,
+            id=group_id,
+            data=data
+        )
+        return item
 
 
-@router.delete('/{group_id}')
+@router.delete(
+    '/{group_id}',
+    # status_code=204
+)
 async def delete_group(
     group_id: int,
-) -> None:
-    try:
-        await GroupService.delete_group(group_id)
+):
+    async with new_async_session() as session:
+        item_check = await GroupService.get_item(
+            session=session,
+            id=group_id
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        await GroupService.delete_item(
+            session=session,
+            id=group_id
+        )
         return JSONResponse(status_code=204, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
 
 
-@router.post('/{group_id}/student')
-async def add_student_in_group(group_id: int, student_id: int):
-    group_student = await GroupStudentService.add_student_in_group(
-        group_id,
-        student_id
-    )
-    return group_student
+@router.get('/{group_id}/students')
+async def get_students_in_group(group_id: int) -> list[GroupStudentDTO]:
+    async with new_async_session() as session:
+        items = await GroupStudentService.get_items(
+            session=session,
+            group_id=group_id
+        )
+        return items
 
 
-@router.delete('/{group_id}/student')
-async def excluded_student_from_group(group_id: int, student_id: int):
-    group_student = await GroupStudentService.excluded_student_from_group(
-        group_id,
-        student_id
-    )
-    return group_student
+@router.post(
+    '/{group_id}/students/{student_id}',
+    response_model=GroupStudentDTO,
+    status_code=201
+)
+async def add_student_in_group(
+    group_id: int,
+    student_id: int
+):
+    async with new_async_session() as session:
+        item_check = await GroupStudentService.get_item_by_ids(
+            session=session,
+            group_id=group_id,
+            student_id=student_id
+        )
+        if item_check:
+            return JSONResponse(status_code=400, content=None)
+        item = await GroupStudentService.add_item(
+            session=session,
+            group_id=group_id,
+            student_id=student_id
+        )
+        return item
+
+
+@router.delete(
+    '/{group_id}/students/{student_id}',
+    # status_code=204
+)
+async def excluded_student_from_group(
+    group_id: int,
+    student_id: int
+):
+    async with new_async_session() as session:
+        item_check = await GroupStudentService.get_item_by_ids(
+            session=session,
+            group_id=group_id,
+            student_id=student_id
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        await GroupStudentService.delete_item(
+            session=session,
+            group_id=group_id,
+            student_id=student_id
+        )
+        return JSONResponse(status_code=204, content=None)

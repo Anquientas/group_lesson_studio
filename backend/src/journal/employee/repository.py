@@ -1,98 +1,167 @@
 from typing import Optional
-from sqlalchemy import func, select
+from sqlalchemy import select
 
-from database import new_async_session
-
-from ..exceptions import ObjectNotFoundException
-from .models import Employee
-from .schemas import EmployeeAddDTO, EmployeeDTO, EmployeeChangeDTO
+from .models import Employee, Role
 
 
 class EmployeeRepository:
     @classmethod
-    async def get_count_by_main_parameters(cls, data: EmployeeAddDTO) -> int:
-        async with new_async_session() as session:
-            query = select(func.count()).filter(
-                Employee.surname == data.surname,
-                Employee.first_name == data.first_name,
-                Employee.phone == data.phone,
-            )
-            number = await session.execute(query)
-            return number.scalars().all()[0]
-
-    @classmethod
-    async def add_employee(cls, data: EmployeeAddDTO) -> EmployeeDTO:
-        async with new_async_session() as session:
-            employee_dict = data.model_dump()
-            employee = Employee(**employee_dict)
-            session.add(employee)
-            await session.commit()
-            return employee
-
-    @classmethod
-    async def get_employees(cls) -> list[EmployeeDTO]:
-        async with new_async_session() as session:
-            query = select(Employee).filter(
-                Employee.is_active
-            )
-            result = await session.execute(query)
-            employees = result.scalars().all()
-            return employees
-
-    @classmethod
-    async def get_employees_by_role(cls, role_id: int) -> list[EmployeeDTO]:
-        async with new_async_session() as session:
-            query = select(Employee).filter(
-                Employee.role_id == role_id,
-                Employee.is_active
-            )
-            result = await session.execute(query)
-            employees = result.scalars().all()
-            return employees
-
-    @classmethod
-    async def get_employee(cls, employee_id: int) -> Optional[EmployeeDTO]:
-        async with new_async_session() as session:
-            query = select(Employee).filter(
-                Employee.id == employee_id,
-                Employee.is_active
-            )
-            result = await session.execute(query)
-            employee = result.scalars().one_or_none()
-            return employee
-
-    @classmethod
-    async def change_employee(
+    async def get_items(
         cls,
-        employee_id: int,
-        data: EmployeeChangeDTO
-    ) -> Optional[EmployeeDTO]:
-        async with new_async_session() as session:
-            query = select(Employee).filter(
-                Employee.id == employee_id,
-                Employee.is_active
-            )
-            result = await session.execute(query)
-            employee = result.scalars().one()
-            employee.surname = data.surname
-            employee.first_name = data.first_name
-            employee.last_name = data.last_name
-            employee.phone = data.phone
-            employee.email = data.email
-            await session.commit()
-            return employee
+        session
+    ) -> list[Employee]:
+        query = select(Employee).filter(Employee.is_active)
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
 
     @classmethod
-    async def delete_employee(cls, employee_id: int):
-        async with new_async_session() as session:
-            query = select(Employee).filter(
-                Employee.id == employee_id,
-                Employee.is_active
-            )
-            result = await session.execute(query)
-            employee = result.scalars().one_or_none()
-            if not employee:
-                raise ObjectNotFoundException
-            employee.is_active = False
-            await session.commit()
-            return employee
+    async def get_item(
+        cls,
+        session,
+        id: int
+    ) -> Optional[Employee]:
+        query = select(Employee).filter(
+            Employee.id == id,
+            Employee.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def get_items_by_role(
+        cls,
+        session,
+        role_id: int
+    ) -> Optional[Employee]:
+        query = select(Employee).filter(
+            Employee.role_id == role_id,
+            Employee.is_active
+        )
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
+
+    @classmethod
+    async def add_item(
+        cls,
+        session,
+        data: dict
+    ) -> Employee:
+        item = Employee(**data)
+        session.add(item)
+        await session.commit()
+        return item
+
+    @classmethod
+    async def change_item(
+        cls,
+        session,
+        id: int,
+        data: dict
+    ) -> Optional[Employee]:
+        query = select(Employee).filter(
+            Employee.id == id,
+            Employee.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one()
+        if data['surname'] and item.surname != data['surname']:
+            item.surname = data['surname']
+        if data['first_name'] and item.first_name != data['first_name']:
+            item.first_name = data['first_name']
+        if data['last_name'] and item.last_name != data['last_name']:
+            item.last_name = data['last_name']
+        if data['gender'] and item.gender != data['gender']:
+            item.gender = data['gender']
+        if data['phone'] and item.phone != data['phone']:
+            item.phone = data['phone']
+        if data['email'] and item.email != data['email']:
+            item.email = data['email']
+        if data['role_id'] and item.role_id != data['role_id']:
+            item.role_id = data['role_id']
+        await session.commit()
+        return item
+
+    @classmethod
+    async def delete_item(
+        cls,
+        session,
+        id: int
+    ):
+        query = select(Employee).filter(
+            Employee.id == id,
+            Employee.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        item.is_active = False
+        await session.commit()
+        return item
+
+
+class RoleRepository:
+    @classmethod
+    async def get_items(
+        cls,
+        session
+    ) -> list[Role]:
+        query = select(Role)
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
+
+    @classmethod
+    async def get_item(
+        cls,
+        session,
+        id: int
+    ) -> Optional[Role]:
+        query = select(Role).filter(
+            Role.id == id
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def get_items_by_name(
+        cls,
+        session,
+        name: str
+    ) -> Optional[Role]:
+        query = select(Role).filter(
+            Role.name == name
+        )
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
+
+    @classmethod
+    async def add_item(
+        cls,
+        session,
+        data: dict
+    ) -> Role:
+        item = Role(**data)
+        session.add(item)
+        await session.commit()
+        return item
+
+    @classmethod
+    async def change_item(
+        cls,
+        session,
+        id: int,
+        data: dict
+    ) -> Optional[Role]:
+        query = select(Role).filter(
+            Role.id == id
+        )
+        result = await session.execute(query)
+        item = result.scalars().one()
+        if data['name'] and item.name != data['name']:
+            item.name = data['name']
+        await session.commit()
+        return item

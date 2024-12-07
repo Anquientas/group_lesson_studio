@@ -3,7 +3,6 @@ from typing import Optional
 from sqlalchemy import select
 
 from .models import Studio
-from .schemas import StudioAddDTO, StudioDTO
 
 
 class StudioRepository:
@@ -32,13 +31,13 @@ class StudioRepository:
         return item
 
     @classmethod
-    async def get_item_by_fields(
+    async def get_item_by_name(
         cls,
         session,
-        data: Studio
+        name: str
     ) -> Optional[Studio]:
         query = select(Studio).filter(
-            Studio.name == data.name,
+            Studio.name == name,
             Studio.is_active
         )
         result = await session.execute(query)
@@ -49,10 +48,9 @@ class StudioRepository:
     async def add_item(
         cls,
         session,
-        data: Studio
+        data: dict
     ) -> Studio:
-        data_dict = data.model_dump()
-        item = Studio(**data_dict)
+        item = Studio(**data)
         session.add(item)
         await session.commit()
         return item
@@ -62,7 +60,7 @@ class StudioRepository:
         cls,
         session,
         id: int,
-        data: Studio
+        name: str
     ) -> Optional[Studio]:
         query = select(Studio).filter(
             Studio.id == id,
@@ -70,8 +68,8 @@ class StudioRepository:
         )
         result = await session.execute(query)
         item = result.scalars().one()
-        if data.name and item.name != data.name:
-            item.name = data.name
+        if name and item.name != name:
+            item.name = name
         await session.commit()
         return item
 

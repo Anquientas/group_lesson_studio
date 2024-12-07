@@ -5,6 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from journal.studio.router import router as studio_router
 from journal.branch.router import router as branch_router
 from journal.room.router import router as room_router
+from journal.employee.router import router as employee_router
+from journal.student.router import router as student_router
+from journal.group.router import router as group_router
+from journal.lesson.router import router as lesson_router
 
 # Delete before production!
 from contextlib import asynccontextmanager
@@ -44,6 +48,10 @@ app.add_middleware(
 app.include_router(studio_router)
 app.include_router(branch_router)
 app.include_router(room_router)
+app.include_router(employee_router)
+app.include_router(student_router)
+app.include_router(group_router)
+app.include_router(lesson_router)
 
 
 # app.include_router(

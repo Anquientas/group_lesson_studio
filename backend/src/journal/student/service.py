@@ -1,7 +1,5 @@
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from typing import Optional
+
 from .repository import StudentRepository
 from .schemas import (
     StudentDTO,
@@ -12,48 +10,67 @@ from .schemas import (
 
 class StudentService:
     @staticmethod
-    async def get_students() -> list[StudentDTO]:
-        students = await StudentRepository.get_students()
-        return students
+    async def get_items(session) -> list[StudentDTO]:
+        items = await StudentRepository.get_items(
+            session=session
+        )
+        return items
 
     @staticmethod
-    async def add_student(data: StudentAddDTO) -> StudentDTO:
-        number = await StudentRepository.get_count_by_main_parameters(data)
-        if number > 0:
-            raise ObjectAlreadyExistsException
-        student = await StudentRepository.add_student(data)
-        return student
+    async def get_item(
+        session,  # : AsyncSession,
+        id: int
+    ) -> Optional[StudentDTO]:
+        item = await StudentRepository.get_item(
+            session=session,
+            id=id
+        )
+        return item
 
     @staticmethod
-    async def get_student(student_id: int) -> StudentDTO:
-        student = await StudentRepository.get_student(student_id)
-        if not student:
-            raise ObjectNotFoundException
-        return student
+    async def get_items_by_name(
+        session,  # : AsyncSession,
+        data: StudentAddDTO
+    ) -> Optional[StudentDTO]:
+        items = await StudentRepository.get_items_by_name(
+            session=session,
+            name=data.name
+        )
+        return items
 
     @staticmethod
-    async def change_student(
-        student_id: int,
+    async def add_item(
+        session,  # : AsyncSession,
+        data: StudentAddDTO
+    ) -> StudentDTO:
+        data_dict = data.model_dump()
+        item = await StudentRepository.add_item(
+            session=session,
+            data=data_dict
+        )
+        return item
+
+    @staticmethod
+    async def change_item(
+        session,
+        id: int,
         data: StudentChangeDTO
     ) -> StudentDTO:
-        student = await StudentRepository.get_student(student_id)
-        if not student:
-            raise ObjectNotFoundException
-        number = await StudentRepository.get_count_by_main_parameters(data)
-        if (
-            number > 0
-            and student.surname != data.surname
-            and student.first_name != data.first_name
-            and student.phone != data.phone
-        ):
-            raise ObjectAlreadyExistsException
-        student = await StudentRepository.change_student(
-            student_id,
-            data
+        data_dict = data.model_dump()
+        item_new = await StudentRepository.change_item(
+            session=session,
+            id=id,
+            data=data_dict
         )
-        return student
+        return item_new
 
     @staticmethod
-    async def delete_student(student_id: int) -> StudentDTO:
-        student = await StudentRepository.reactive_student(student_id)
-        return student
+    async def delete_item(
+        session,
+        id: int,
+    ):
+        item = await StudentRepository.delete_item(
+            session=session,
+            id=id
+        )
+        return item

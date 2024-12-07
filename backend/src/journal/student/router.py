@@ -1,69 +1,106 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from database import new_async_session
 from .service import StudentService
-from .schemas import StudentAddDTO, StudentDTO, StudentChangeDTO
+from .schemas import (
+    StudentDTO,
+    StudentAddDTO,
+    StudentChangeDTO
+)
 
 
 router = APIRouter(
     prefix='/students',
-    tags=['students']
+    tags=['Students']
 )
 
 
-@router.get('/')
-async def get_students(studio_id: int) -> list[StudentDTO]:
-    students = await StudentService.get_students(studio_id)
-    return students
+@router.get('')
+async def get_students() -> list[StudentDTO]:
+    async with new_async_session() as session:
+        items = await StudentService.get_items(session=session)
+        return items
 
 
-@router.post('/', response_model=StudentDTO, status_code=201)
+@router.post(
+    '',
+    response_model=StudentDTO,
+    status_code=201
+)
 async def add_student(
-    student: StudentAddDTO,
-) -> StudentDTO:
-    try:
-        student = await StudentService.add_student(student)
-        return student
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
+    data: StudentAddDTO
+):
+    async with new_async_session() as session:
+        item_check = await StudentService.get_item_by_name(
+            session=session,
+            data=data
+        )
+        if item_check:
+            return JSONResponse(status_code=400, content=None)
+        item = await StudentService.add_item(
+            session=session,
+            data=data
+        )
+        return item
 
 
 @router.get(
     '/{student_id}',
     response_model=StudentDTO
 )
-async def get_student(student_id: int) -> StudentDTO:
-    try:
-        student = await StudentService.get_student(student_id)
-        return student
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+async def get_student(student_id: int) -> Optional[StudentDTO]:
+    async with new_async_session() as session:
+        item = await StudentService.get_item(
+            session=session,
+            id=student_id
+        )
+        if not item:
+            return JSONResponse(status_code=404, content=None)
+        return item
 
 
-@router.patch('/{student_id}')
+@router.patch(
+    '/{student_id}',
+    response_model=StudentDTO
+)
 async def change_student(
-    student: StudentChangeDTO,
-    student_id: int,
-) -> StudentDTO:
-    try:
-        student = await StudentService.change_student(student_id, student)
-        return student
-    except ObjectAlreadyExistsException:
-        return JSONResponse(status_code=400, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)
+    data: StudentChangeDTO,
+    room_id: int
+):
+    async with new_async_session() as session:
+        item_check = await StudentService.get_item(
+            session=session,
+            id=room_id
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        item = await StudentService.change_item(
+            session=session,
+            id=room_id,
+            data=data
+        )
+        return item
 
 
-@router.delete('/{student_id}')
+@router.delete(
+    '/{student_id}',
+    # status_code=204
+)
 async def delete_student(
-    student_id: int,
-) -> None:
-    try:
-        await StudentService.delete_student(student_id)
+    student_id: int
+):
+    async with new_async_session() as session:
+        item_check = await StudentService.get_item(
+            session=session,
+            id=student_id
+        )
+        if not item_check:
+            return JSONResponse(status_code=404, content=None)
+        await StudentService.delete_item(
+            session=session,
+            id=student_id
+        )
         return JSONResponse(status_code=204, content=None)
-    except ObjectNotFoundException:
-        return JSONResponse(status_code=404, content=None)

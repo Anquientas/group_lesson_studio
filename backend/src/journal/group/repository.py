@@ -1,120 +1,172 @@
 from typing import Optional
+
 from sqlalchemy import select
 
-from database import new_async_session
-
-from ..exceptions import ObjectNotFoundException
 from .models import Group, GroupStudent
-from .schemas import (
-    GroupAddDTO,
-    GroupDTO,
-    GroupChangeDTO,
-    GroupStudentAddDTO
-)
 
 
 class GroupRepository:
     @classmethod
-    async def add_group(cls, data: GroupAddDTO) -> GroupDTO:
-        async with new_async_session() as session:
-            group_dict = data.model_dump()
-            group = Group(**group_dict)
-            session.add(group)
-            await session.commit()
-            return group
-
-    @classmethod
-    async def get_groups(cls) -> list[GroupDTO]:
-        async with new_async_session() as session:
-            query = select(Group).filter(
-                Group.is_active
-            )
-            result = await session.execute(query)
-            groups = result.scalars().all()
-            return groups
-
-    @classmethod
-    async def get_group(cls, group_id: int) -> Optional[GroupDTO]:
-        async with new_async_session() as session:
-            query = select(Group).filter(
-                Group.id == group_id,
-                Group.is_active
-            )
-            result = await session.execute(query)
-            group = result.scalars().one_or_none()
-            return group
-
-    @classmethod
-    async def change_group(
+    async def get_items(
         cls,
-        group_id: int,
-        data: GroupChangeDTO
-    ) -> Optional[GroupDTO]:
-        async with new_async_session() as session:
-            query = select(Group).filter(
-                Group.id == group_id,
-                Group.is_active
-            )
-            result = await session.execute(query)
-            group = result.scalars().one()
-            group.name = data.name
-            group.teacher_id = data.teacher_id
-            group.age_min = data.age_min
-            group.age_max = data.age_max
-            await session.commit()
-            return group
+        session
+    ) -> list[Group]:
+        query = select(Group).filter(Group.is_active)
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
 
     @classmethod
-    async def delete_group(cls, group_id: int):
-        async with new_async_session() as session:
-            query = select(Group).filter(
-                Group.id == group_id,
-                Group.is_active
-            )
-            result = await session.execute(query)
-            group = result.scalars().one_or_none()
-            if not group:
-                raise ObjectNotFoundException
-            group.is_active = False
+    async def get_item(
+        cls,
+        session,
+        id: int
+    ) -> Optional[Group]:
+        query = select(Group).filter(
+            Group.id == id,
+            Group.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def get_item_by_name(
+        cls,
+        session,
+        name: str
+    ) -> Optional[Group]:
+        query = select(Group).filter(
+            Group.name == name,
+            Group.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
+
+    @classmethod
+    async def add_item(
+        cls,
+        session,
+        data: dict
+    ) -> Group:
+        item = Group(**data)
+        session.add(item)
+        await session.commit()
+        return item
+
+    @classmethod
+    async def change_item(
+        cls,
+        session,
+        id: int,
+        name: str
+    ) -> Optional[Group]:
+        query = select(Group).filter(
+            Group.id == id,
+            Group.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one()
+        if name and item.name != name:
+            item.name = name
+        await session.commit()
+        return item
+
+    @classmethod
+    async def delete_item(
+        cls,
+        session,
+        id: int
+    ):
+        query = select(Group).filter(
+            Group.id == id,
+            Group.is_active
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        item.is_active = False
+        await session.commit()
+        return item
+
+    @classmethod
+    async def delete_items_by_branch_id(
+        cls,
+        session,
+        branch_id: int,
+    ):
+        query = select(Group).filter(
+            Group.branch_id == branch_id,
+            Group.is_active
+        )
+        result = await session.execute(query)
+        items = result.scalars().all()
+        if items:
+            for item in items:
+                item.is_active = False
             await session.commit()
-            return group
+        return items
 
 
 class GroupStudentRepository:
     @classmethod
-    async def add_student_in_group(
+    async def get_items(
         cls,
-        data: GroupStudentAddDTO
-    ):  # -> GroupDTO:
-        async with new_async_session() as session:
-            group_student_dict = data.model_dump()
-            group_student = GroupStudent(**group_student_dict)
-            session.add(group_student)
-            await session.commit()
-            return group_student
+        session,
+        group_id: int
+    ) -> list[GroupStudent]:
+        query = select(GroupStudent).filter(
+            GroupStudent.group_id == group_id,
+            not GroupStudent.is_excluded
+        )
+        result = await session.execute(query)
+        items = result.scalars().all()
+        return items
 
     @classmethod
-    async def excluded_student_from_group(
+    async def get_item_by_ids(
         cls,
+        session,
         group_id: int,
         student_id: int
-    ):  # -> GroupDTO:
-        async with new_async_session() as session:
-            query = select(GroupStudent).filter(
-                GroupStudent.student_id == student_id,
-                GroupStudent.group_id == group_id
-            )
-            result = await session.execute(query)
-            row = result.scalars().one_or_none()
-            row.is_excluded = True
-            await session.commit()
-            return row
+    ) -> GroupStudent:
+        query = select(GroupStudent).filter(
+            GroupStudent.group_id == group_id,
+            GroupStudent.student_id == student_id,
+            not GroupStudent.is_excluded
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        return item
 
-    async def get_students_in_group(cls, group_id: int) -> list[int]:
-        async with new_async_session() as session:
-            query = select(GroupStudent.student_id).filter(
-                GroupStudent.group_id == group_id
-            )
-            result = await session.execute(query)
-            students = result.scalars().all()
-            return students
+    @classmethod
+    async def add_item(
+        cls,
+        session,
+        group_id: int,
+        student_id: int
+    ) -> GroupStudent:
+        item = GroupStudent(
+            group_id=group_id,
+            student_id=student_id
+        )
+        session.add(item)
+        await session.commit()
+        return item
+
+    @classmethod
+    async def delete_item(
+        cls,
+        session,
+        group_id: int,
+        student_id: int
+    ):
+        query = select(GroupStudent).filter(
+            GroupStudent.group_id == group_id,
+            GroupStudent.student_id == student_id
+        )
+        result = await session.execute(query)
+        item = result.scalars().one_or_none()
+        item.is_excluded = True
+        await session.commit()
+        return item

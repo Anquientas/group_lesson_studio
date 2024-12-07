@@ -1,14 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import String, TIMESTAMP, text
+from sqlalchemy import String, text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Model
-from ..stuff.models import Gender
+from ..employee.models import Gender
 
 
 class Student(Model):
-    __tablename__ = 'stuff'
+    __tablename__ = 'student'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     surname: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -18,7 +18,7 @@ class Student(Model):
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
     email: Mapped[str] = mapped_column(String(150))
     created_at:  Mapped[datetime] = mapped_column(
-        server_default=text('TIMEZONE("utc", now())')
+        # server_default=text('TIMEZONE("utc", now())')
+        server_default=func.now()
     )
-    changed_at: Mapped[TIMESTAMP]
     is_active: Mapped[bool] = mapped_column(default=True)

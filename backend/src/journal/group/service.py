@@ -1,67 +1,139 @@
-from ..exceptions import (
-    ObjectAlreadyExistsException,
-    ObjectNotFoundException
-)
+from typing import Optional
+
 from .repository import GroupRepository, GroupStudentRepository
 from .schemas import (
     GroupDTO,
     GroupAddDTO,
     GroupChangeDTO,
-    GroupStudentAddDTO
+    GroupStudentDTO
 )
 
 
 class GroupService:
     @staticmethod
-    async def get_groups() -> list[GroupDTO]:
-        groups = await GroupRepository.get_groups()
-        return groups
+    async def get_items(session) -> list[GroupDTO]:
+        items = await GroupRepository.get_items(
+            session=session
+        )
+        return items
 
     @staticmethod
-    async def add_group(data: GroupAddDTO) -> GroupDTO:
-        group = await GroupRepository.add_group(data)
-        return group
+    async def get_item(
+        session,  # : AsyncSession,
+        id: int
+    ) -> Optional[GroupDTO]:
+        item = await GroupRepository.get_item(
+            session=session,
+            id=id
+        )
+        return item
 
     @staticmethod
-    async def get_group(group_id: int) -> GroupDTO:
-        group = await GroupRepository.get_group(group_id)
-        if not group:
-            raise ObjectNotFoundException
-        return group
+    async def get_item_by_name(
+        session,  # : AsyncSession,
+        name: str
+    ) -> Optional[GroupDTO]:
+        item = await GroupRepository.get_item_by_name(
+            session=session,
+            name=name
+        )
+        return item
 
     @staticmethod
-    async def change_group(
-        group_id: int,
+    async def add_item(
+        session,  # : AsyncSession,
+        data: GroupAddDTO
+    ) -> GroupDTO:
+        data_dict = data.model_dump()
+        item = await GroupRepository.add_item(
+            session=session,
+            data=data_dict
+        )
+        return item
+
+    @staticmethod
+    async def change_item(
+        session,
+        id: int,
         data: GroupChangeDTO
     ) -> GroupDTO:
-        group = await GroupRepository.get_group(group_id)
-        if not group:
-            raise ObjectNotFoundException
-        group = await GroupRepository.change_group(
-            group_id,
-            data
+        data_dict = data.model_dump()
+        item_new = await GroupRepository.change_item(
+            session=session,
+            id=id,
+            name=data_dict
         )
-        return group
+        return item_new
 
     @staticmethod
-    async def delete_group(group_id: int) -> GroupDTO:
-        group = await GroupRepository.delete_group(group_id)
-        return group
+    async def delete_item(
+        session,
+        id: int,
+    ):
+        item = await GroupRepository.delete_item(
+            session=session,
+            id=id
+        )
+        return item
+
+    @staticmethod
+    async def delete_items_by_branch_id(
+        session,
+        branch_id: int
+    ):
+        item = await GroupRepository.delete_items_by_branch_id(
+            session=session,
+            branch_id=branch_id
+        )
+        return item
 
 
 class GroupStudentService:
     @staticmethod
-    async def add_student_in_group(id_group: int, id_student: int):
-        group_student = await GroupStudentRepository.add_student_in_group(
-            id_group,
-            id_student
+    async def get_items(
+        session,
+        group_id: int
+    ) -> list[GroupStudentDTO]:
+        items = await GroupStudentRepository.get_items(
+            session=session,
+            group_id=group_id
         )
-        return group_student
+        return items
+
+    async def get_item_by_ids(
+        session,
+        group_id: int,
+        student_id: int
+    ) -> GroupStudentDTO:
+        item = await GroupStudentRepository.get_items(
+            session=session,
+            group_id=group_id,
+            student_id=student_id
+        )
+        return item
 
     @staticmethod
-    async def excluded_student_from_group(id_group: int, id_student: int):
-        group_student = await GroupStudentRepository.excluded_student_from_group(
-            id_group,
-            id_student
+    async def add_item(
+        session,  # : AsyncSession,
+        group_id: int,
+        student_id: int
+    ) -> GroupStudentDTO:
+        item = await GroupRepository.add_item(
+            session=session,
+            group_id=group_id,
+            student_id=student_id
         )
-        return group_student
+        return item
+
+    @staticmethod
+    async def delete_item(
+        session,
+        group_id: int,
+        student_id: int
+    ):
+        item = await GroupRepository.delete_item(
+            session=session,
+            group_id=group_id,
+            student_id=student_id
+        )
+        return item

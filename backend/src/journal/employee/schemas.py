@@ -28,3 +28,17 @@ class EmployeeChangeDTO(BaseModel):
     phone: str = Field(max_length=12, title='Номер телефона')
     email: str = Field(max_length=150, title='E-mail')
     role_id: int = Field(title='Роль')
+
+
+class RoleAddDTO(BaseModel):
+    name: str = Field(max_length=50, title='Роль')
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleDTO(EmployeeAddDTO):
+    id: int
+
+
+class RoleChangeDTO(BaseModel):
+    name: str = Field(max_length=50, title='Роль')

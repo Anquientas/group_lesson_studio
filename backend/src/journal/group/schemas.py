@@ -24,8 +24,7 @@ class GroupChangeDTO(BaseModel):
     age_max: int = Field(title='Максимальный возраст')
 
 
-class GroupStudentAddDTO(BaseModel):
+class GroupStudentDTO(BaseModel):
+    id: int
     class_id: int = Field(title='Группа')
     student_id: int = Field(title='Ученик')
-
-    # model_config = ConfigDict(from_attributes=True)

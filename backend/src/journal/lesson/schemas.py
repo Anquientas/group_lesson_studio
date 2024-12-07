@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, types
 
 from .models import LessonStatus
 
@@ -24,9 +24,9 @@ class LessonAddDTO(BaseModel):
     type_id: int = Field(title='Тип урока')
     group_id: int = Field(title='Группа')
     room_id: int = Field(title='Помещение')
-    date: datetime.date = Field(title='Дата')
-    time_start: datetime.time = Field(title='Начало')
-    time_end: datetime.time = Field(title='Окончание')
+    date: types.NaiveDatetime = Field(title='Дата')
+    time_start: types.NaiveDatetime = Field(title='Начало')
+    time_end: types.NaiveDatetime = Field(title='Окончание')
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,9 +40,9 @@ class LessonChangeDTO(BaseModel):
     type_id: int = Field(title='Тип урока')
     class_id: int = Field(title='Группа')
     room_id: int = Field(title='Помещение')
-    date: datetime.date = Field(title='Дата')
-    time_start: datetime.time = Field(title='Начало')
-    time_end: datetime.time = Field(title='Окончание')
+    date: types.NaiveDatetime = Field(title='Дата')
+    time_start: types.NaiveDatetime = Field(title='Начало')
+    time_end: types.NaiveDatetime = Field(title='Окончание')
     status: LessonStatus = Field(title='Статус')
 
 

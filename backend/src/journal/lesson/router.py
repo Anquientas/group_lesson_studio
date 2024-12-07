@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ...database import new_async_session
+from database import new_async_session
 from .service import (
     LessonService,
     LessonStudentService,
@@ -28,7 +28,7 @@ from .schemas import (
 
 router = APIRouter(
     prefix='/lessons',
-    tags=['lessons']
+    tags=['Lessons']
 )
 
 
@@ -147,7 +147,8 @@ async def change_lesson_type(
             return JSONResponse(status_code=404, content=None)
         item = await LessonTypeService.change_item(
             session=session,
-            id=type_id
+            id=type_id,
+            data=data
         )
         return item
 
