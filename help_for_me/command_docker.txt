@@ -14,3 +14,4 @@ down -v:
 
 exec
 	docker exec -it db_? psql -p 5432 -U ? -d db_?
+	sudo docker exec -it localhost psql -p 5432 -U user_db_test -d user_db_test
